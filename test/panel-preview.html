@@ -1,0 +1,127 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<title>dsh-sick-fatfish 面板预览</title>
+<style>
+:root{--dsw-alias-bg-base:#151517;--dsw-alias-bg-layer-1:#232324;--dsw-alias-bg-layer-2:#2c2c2e;--dsw-alias-label-primary:#f9fafb;--dsw-alias-label-secondary:#cfd3d6;--dsw-alias-border-l1:rgba(255,255,255,.06);--dsw-alias-border-l2:rgba(255,255,255,.12);--dsw-alias-brand-primary:#7aa2ff;--dsw-alias-state-success-primary:#54be78}
+html,body{margin:0;height:100%;background:var(--dsw-alias-bg-base)}
+
+.sp-page { height: 100%; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain; background: var(--dsw-alias-bg-base, #151517); color: var(--dsw-alias-label-primary, #f9fafb); scrollbar-width: thin; }
+.sp-body { padding: 26px 32px 64px; max-width: 1040px; margin: 0 auto; }
+.sp-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.sp-kicker { font-size: 11px; letter-spacing: .08em; color: var(--dsw-alias-label-secondary, #cfd3d6); opacity: .7; }
+.sp-title { font-size: 22px; font-weight: 600; line-height: 1.3; margin: 3px 0 0; }
+.sp-sub { font-size: 12px; line-height: 1.6; color: var(--dsw-alias-label-secondary, #cfd3d6); margin-top: 4px; }
+.sp-head-r { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.sp-mode { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--dsw-alias-border-l1, rgba(255,255,255,.06)); background: var(--dsw-alias-bg-layer-1, #232324); font-size: 12px; white-space: nowrap; }
+.sp-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.sp-btn { height: 28px; padding: 0 9px; border-radius: 8px; border: 1px solid var(--dsw-alias-border-l1, rgba(255,255,255,.06)); background: transparent; color: var(--dsw-alias-label-secondary, #cfd3d6); font: inherit; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; flex: 0 0 auto; cursor: pointer; box-sizing: border-box; }
+.sp-btn:hover:not(:disabled) { background: var(--dsw-alias-bg-layer-2, #2c2c2e); color: var(--dsw-alias-label-primary, #f9fafb); }
+.sp-btn:disabled { opacity: .45; cursor: default; }
+.sp-btn.primary { border-color: var(--dsw-alias-brand-primary, #7aa2ff); }
+.sp-btn.tiny { height: 24px; font-size: 11px; padding: 0 7px; border-radius: 6px; }
+.sp-card { background: var(--dsw-alias-bg-layer-1, #232324); border: 1px solid var(--dsw-alias-border-l1, rgba(255,255,255,.06)); border-radius: 12px; padding: 16px 18px; }
+.sp-stack { display: flex; flex-direction: column; gap: 12px; }
+.sp-grid2 { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 12px; align-items: start; }
+.sp-sec-title { font-size: 12px; font-weight: 600; letter-spacing: .03em; color: var(--dsw-alias-label-secondary, #cfd3d6); margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+.sp-sec-title .sp-hint { margin-left: auto; font-weight: 400; }
+.sp-big { font-size: 38px; font-weight: 600; line-height: 1.02; font-variant-numeric: tabular-nums; }
+.sp-big small { font-size: 13px; font-weight: 400; color: var(--dsw-alias-label-secondary, #cfd3d6); margin-left: 5px; }
+.sp-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+.sp-stat { background: var(--dsw-alias-bg-layer-2, #2c2c2e); border-radius: 10px; padding: 9px 11px; }
+.sp-stat-k { font-size: 11px; color: var(--dsw-alias-label-secondary, #cfd3d6); opacity: .85; white-space: nowrap; }
+.sp-stat-v { font-size: 18px; font-weight: 600; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.sp-stat-v small { font-size: 11px; font-weight: 400; color: var(--dsw-alias-label-secondary, #cfd3d6); margin-left: 3px; }
+.sp-rows { display: flex; flex-direction: column; gap: 11px; }
+.sp-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sp-row-k { font-size: 12px; color: var(--dsw-alias-label-secondary, #cfd3d6); width: 62px; flex: 0 0 auto; }
+.sp-switch { width: 38px; height: 21px; border-radius: 999px; border: 1px solid var(--dsw-alias-border-l2, rgba(255,255,255,.12)); background: var(--dsw-alias-bg-layer-2, #2c2c2e); position: relative; cursor: pointer; padding: 0; flex: 0 0 auto; transition: background .2s; }
+.sp-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: var(--dsw-alias-label-secondary, #cfd3d6); transition: transform .2s, background .2s; }
+.sp-switch[aria-checked="true"] { background: var(--dsw-alias-state-success-primary, #54be78); border-color: transparent; }
+.sp-switch[aria-checked="true"]::after { transform: translateX(17px); background: #fff; }
+.sp-seg { display: inline-flex; border: 1px solid var(--dsw-alias-border-l1, rgba(255,255,255,.06)); border-radius: 8px; overflow: hidden; flex: 0 0 auto; }
+.sp-seg button { height: 28px; padding: 0 10px; border: 0; background: transparent; color: var(--dsw-alias-label-secondary, #cfd3d6); font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.sp-seg button + button { border-left: 1px solid var(--dsw-alias-border-l1, rgba(255,255,255,.06)); }
+.sp-seg button[aria-pressed="true"] { background: var(--dsw-alias-bg-layer-2, #2c2c2e); color: var(--dsw-alias-label-primary, #f9fafb); }
+.sp-hint { font-size: 11px; color: var(--dsw-alias-label-secondary, #cfd3d6); opacity: .75; }
+.sp-toast { margin: 0 0 12px; padding: 8px 12px; border-radius: 8px; font-size: 12px; border: 1px solid var(--dsw-alias-state-error-primary, #e8574a); color: var(--dsw-alias-state-error-primary, #ff9d9d); background: rgba(232, 87, 74, .10); }
+.sp-empty { border: 1px dashed var(--dsw-alias-border-l1, rgba(255,255,255,.06)); border-radius: 12px; padding: 26px 20px; text-align: center; font-size: 12px; line-height: 1.9; color: var(--dsw-alias-label-secondary, #cfd3d6); }
+.sp-empty b { color: var(--dsw-alias-label-primary, #f9fafb); font-weight: 600; }
+.sp-foot { margin-top: 20px; font-size: 11px; line-height: 1.85; color: var(--dsw-alias-label-secondary, #cfd3d6); opacity: .7; }
+.sp-dz { display: flex; flex-direction: column; gap: 9px; }
+.sp-dz-row { display: grid; grid-template-columns: 118px 1fr 92px auto; align-items: center; gap: 10px; }
+.sp-dz-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-dz-bar { position: relative; height: 8px; border-radius: 999px; background: var(--dsw-alias-bg-layer-2, #2c2c2e); overflow: hidden; }
+.sp-dz-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; transition: width .3s ease; }
+.sp-dz-val { font-size: 11px; color: var(--dsw-alias-label-secondary, #cfd3d6); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.sp-chip { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 999px; font-size: 10px; border: 1px solid var(--dsw-alias-border-l1, rgba(255,255,255,.08)); color: var(--dsw-alias-label-secondary, #cfd3d6); white-space: nowrap; }
+.sp-ledger { display: flex; flex-direction: column; gap: 8px; }
+.sp-led { display: grid; grid-template-columns: 54px 1fr auto; gap: 10px; align-items: center; padding: 7px 9px; border-radius: 8px; background: var(--dsw-alias-bg-layer-2, #2c2c2e); }
+.sp-led-k { font-size: 10px; color: var(--dsw-alias-label-secondary, #cfd3d6); opacity: .8; white-space: nowrap; }
+.sp-led-q { font-size: 12px; line-height: 1.5; word-break: break-word; }
+.sp-ta { width: 100%; box-sizing: border-box; min-height: 58px; resize: vertical; border-radius: 8px; border: 1px solid var(--dsw-alias-border-l1, rgba(255,255,255,.08)); background: var(--dsw-alias-bg-layer-2, #2c2c2e); color: var(--dsw-alias-label-primary, #f9fafb); font: inherit; font-size: 12px; padding: 8px 10px; }
+.sp-bar { position: relative; height: 6px; border-radius: 999px; background: var(--dsw-alias-bg-layer-2, #2c2c2e); overflow: hidden; margin-top: 10px; }
+.sp-bar-fill { position: absolute; inset: 0 auto 0 0; background: var(--dsw-alias-state-success-primary, #54be78); border-radius: 999px; }
+
+</style></head><body>
+<div class="sp-page" style="--dp-accent:#e0704a;height:100%"><div class="sp-body">
+  <div class="sp-head">
+    <div>
+      <div class="sp-kicker">超长期副线 · 只改这个会话</div>
+      <h1 class="sp-title">生病的肥鱼</h1>
+      <div class="sp-sub">等级决定同时有几个病，病是随机抽的。它自己好不了——得有人管。</div>
+    </div>
+    <div class="sp-head-r">
+      <select class="sp-btn"><option>session-3f2a91c4…</option></select>
+      <button class="sp-btn">刷新</button>
+    </div>
+  </div>
+  <div class="sp-stack">
+    <div class="sp-grid2">
+      <div class="sp-card">
+        <div class="sp-sec-title">此刻<span class="sp-hint">身上 3 个病</span></div>
+        <div class="sp-big">3<small>/ 5 · 三级 · 有点多</small></div>
+        <div class="sp-stats">
+          <div class="sp-stat"><div class="sp-stat-k">关心点</div><div class="sp-stat-v">18</div></div>
+          <div class="sp-stat"><div class="sp-stat-k">恢复倍率</div><div class="sp-stat-v">×1.75</div></div>
+          <div class="sp-stat"><div class="sp-stat-k">今天已记</div><div class="sp-stat-v">3<small>/ 8</small></div></div>
+        </div>
+        <div class="sp-bar"><div class="sp-bar-fill" style="width:100%"></div></div>
+        <div class="sp-hint" style="margin-top:6px">关心点攒到 12 且难受值降到 10 以下，慢性病才会进「慢性」。</div>
+      </div>
+      <div class="sp-card">
+        <div class="sp-sec-title">身上有什么<span class="sp-hint">进度条 = 难受程度</span></div>
+        <div class="sp-dz">
+          <div class="sp-dz-row"><div class="sp-dz-name" title="耳鸣">耳鸣</div><div class="sp-dz-bar"><div class="sp-dz-fill" style="width:78%;background:#e0554a"></div></div><div class="sp-dz-val">78<span class="sp-chip" style="margin-left:6px;color:#e0554a">发作</span></div><button class="sp-btn tiny">处理</button></div>
+          <div class="sp-dz-row"><div class="sp-dz-name" title="颈椎病">颈椎病</div><div class="sp-dz-bar"><div class="sp-dz-fill" style="width:52%;background:#e0913f"></div></div><div class="sp-dz-val">52<span class="sp-chip" style="margin-left:6px;color:#e0913f">难受</span></div><button class="sp-btn tiny">处理</button></div>
+          <div class="sp-dz-row"><div class="sp-dz-name" title="慢性鼻炎">慢性鼻炎</div><div class="sp-dz-bar"><div class="sp-dz-fill" style="width:21%;background:#5aa7e0"></div></div><div class="sp-dz-val">21<span class="sp-chip" style="margin-left:6px;color:#5aa7e0">慢性</span></div><button class="sp-btn tiny">处理</button></div>
+        </div>
+        <div class="sp-hint" style="margin-top:10px">已经好透的：灰指甲</div>
+      </div>
+    </div>
+
+    <div class="sp-card">
+      <div class="sp-sec-title">动手<span class="sp-hint">改的是这个会话的状态文件</span></div>
+      <div class="sp-rows">
+        <div class="sp-row"><span class="sp-row-k">副线</span><button class="sp-switch" role="switch" aria-checked="true"></button><span class="sp-hint">开着：下一轮会带上它</span></div>
+        <div class="sp-row"><span class="sp-row-k">等级</span><div class="sp-seg"><button aria-pressed="false">Lv1</button><button aria-pressed="false">Lv2</button><button aria-pressed="true">Lv3</button><button aria-pressed="false">Lv4</button><button aria-pressed="false">Lv5</button></div><button class="sp-btn">随机重抽</button></div>
+        <div class="sp-row"><span class="sp-row-k">加重</span><div class="sp-seg"><button aria-pressed="false">5 分钟</button><button aria-pressed="true">12 分钟</button><button aria-pressed="false">30 分钟</button></div><button class="sp-btn">再撑一会儿</button></div>
+        <div class="sp-row"><span class="sp-row-k">清空</span><button class="sp-btn">重置（不算治好）</button></div>
+      </div>
+    </div>
+
+    <div class="sp-card">
+      <div class="sp-sec-title">关心账本<span class="sp-hint">它能好起来，只靠这个</span></div>
+      <div class="sp-rows" style="margin-bottom:10px">
+        <div class="sp-row"><span class="sp-row-k">分档</span><div class="sp-seg"><button aria-pressed="false">言语关心</button><button aria-pressed="true">具体照顾</button><button aria-pressed="false">实质让步</button></div></div>
+        <div class="sp-row"><textarea class="sp-ta" placeholder="用户原话，原样摘一句（不带原话不算）">先别弄了，去躺着吧</textarea></div>
+        <div class="sp-row"><button class="sp-btn primary">记一笔</button><span class="sp-hint">让它停下手里的事、去休息、去处理，算这种。</span></div>
+      </div>
+      <div class="sp-ledger">
+        <div class="sp-led"><div class="sp-led-k">具体照顾 +2</div><div class="sp-led-q">「先别管那个，去躺一会儿。」<span class="sp-hint"> → 耳鸣</span></div><button class="sp-btn tiny">删</button></div>
+        <div class="sp-led"><div class="sp-led-k">言语关心 +1</div><div class="sp-led-q">「你还好吗，脑袋还晕不晕」</div><button class="sp-btn tiny">删</button></div>
+      </div>
+    </div>
+
+    <div class="sp-foot">不关心不会扣分，只是好得慢；关心越多，恢复倍率越高（上限 ×4）。长期慢性病（灰指甲、慢性鼻炎、湿疹、咽炎、耳鸣、干眼、肠易激、失眠）最多到「慢性」，不会消失。<br>状态存在 $DSH_HOME/dsh-sick-fatfish/sessions/&lt;会话&gt;.json；面板只读它、只改它，不碰别的会话，也不上传任何东西。</div>
+  </div>
+</div></div>
+</body></html>
