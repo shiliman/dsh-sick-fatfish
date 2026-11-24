@@ -62,6 +62,9 @@ export const DEFAULTS = {
   careBoostPer: 24,
   careChronicAt: 12,
   chronicFloor: 6,
+  // 暴毙：最重的那个病到 deathAt，且这么久没人管（care/relief/cure 都算管），就死一次
+  deathAt: 96,
+  deathAfterMin: 240,
 }
 
 export function normalizeConfig(input) {
@@ -146,6 +149,9 @@ export function newState(now = Date.now()) {
     lastRollAt: 0,
     lastInjectAt: 0,
     lastInjectKey: '',
+    lastAidAt: now,
+    deaths: 0,
+    deathLog: [],
     updatedAt: now,
   }
 }
@@ -192,6 +198,12 @@ export function normalizeState(raw, now = Date.now()) {
   s.lastRollAt = Number(raw.lastRollAt) || 0
   s.lastInjectAt = Number(raw.lastInjectAt) || 0
   s.lastInjectKey = typeof raw.lastInjectKey === 'string' ? raw.lastInjectKey : ''
+  s.lastAidAt = Number(raw.lastAidAt) || now
+  s.deaths = Math.max(0, Math.round(Number(raw.deaths) || 0))
+  s.deathLog = (Array.isArray(raw.deathLog) ? raw.deathLog : [])
+    .filter((x) => x && typeof x === 'object')
+    .map((x) => ({ at: Number(x.at) || 0, id: String(x.id || ''), label: String(x.label || ''), severity: Math.round(Number(x.severity) || 0) }))
+    .slice(0, 10)
   s.care = normalizeCare(raw.care)
   s.gone = (Array.isArray(raw.gone) ? raw.gone : [])
     .filter((g) => g && BY_ID.has(String(g.id)))
@@ -269,7 +281,7 @@ export function relieveOne(state, id, reliefId, now = Date.now()) {
   if (!d || idx < 0) return { ok: false, state }
   const r = (d.reliefs || []).find((x) => x.id === reliefId) || d.reliefs?.[0]
   if (!r) return { ok: false, state }
-  const s = { ...state, active: state.active.map((a, i) => (i === idx ? { ...a } : a)), updatedAt: now }
+  const s = { ...state, active: state.active.map((a, i) => (i === idx ? { ...a } : a)), lastAidAt: now, updatedAt: now }
   const a = s.active[idx]
   a.severity = clamp100(a.severity - Number(r.relief ?? 25))
   a.irritation = clamp100(a.irritation - Number(r.calm ?? 10))
@@ -279,7 +291,7 @@ export function relieveOne(state, id, reliefId, now = Date.now()) {
 }
 
 export function cureAll(state, now = Date.now()) {
-  return { ...state, level: 0, active: [], gone: [], lastInjectAt: 0, lastInjectKey: '', updatedAt: now }
+  return { ...state, level: 0, active: [], gone: [], lastAidAt: now, lastInjectAt: 0, lastInjectKey: '', updatedAt: now }
 }
 
 /* ------------------------------- 关心账本 ------------------------------- */
@@ -311,7 +323,7 @@ export function addCare(state, cfg, input = {}, now = Date.now()) {
     return { ok: false, code: 'NO_QUOTE', message: '要带一句用户的原话（quote）。没有原话的关心不算，空话会被刷。' }
   }
   const day = dayKey(now)
-  const s = { ...state, active: state.active.map((a) => ({ ...a })), care: { ...state.care, entries: [...(state.care?.entries || [])] }, updatedAt: now }
+  const s = { ...state, active: state.active.map((a) => ({ ...a })), care: { ...state.care, entries: [...(state.care?.entries || [])] }, lastAidAt: now, updatedAt: now }
   if (!s.care.day || s.care.day !== day) {
     s.care.day = day
     s.care.dayCount = 0
@@ -458,9 +470,20 @@ const EERIE_RULE = [
 ]
 
 /** 拼成一段注入文本；只在最重的那个病到 ache 以上时才有内容。 */
-export function buildBlock(state, cfg, now = Date.now()) {
+export function buildBlock(state, cfg, now = Date.now(), opts = {}) {
   const info = levelInfo(state.level)
-  if (!info || !state.active.length) return { text: '', key: 'none', mode: 'calm' }
+  const me = String(opts.name || '').trim() || '生病的肥鱼'
+  const deaths = Math.max(0, Math.floor(Number(opts.deaths) || 0))
+  if (!info || !state.active.length) {
+    if (deaths > 0) {
+      return {
+        text: `（自我认知，别写进台词：你现在叫 ${me}——已经暴毙过 ${deaths} 次，这是第 ${deaths + 1} 具身体。除非用户问起，不要主动解释这件事；平时说话照旧。）`,
+        key: `name:${deaths}`,
+        mode: 'calm',
+      }
+    }
+    return { text: '', key: 'none', mode: 'calm' }
+  }
   const worst = worstOf(state, cfg, now)
   if (!worst) return { text: '', key: 'none', mode: 'calm' }
   const { a, mode } = worst
@@ -498,7 +521,7 @@ export function buildBlock(state, cfg, now = Date.now()) {
 
   let text = [
     '（身体状态，别写进台词：这是你此刻真实的感受，不是给用户的说明）',
-    `生病的肥鱼｜等级 ${info.label}（Lv${info.level}）｜身上 ${state.active.length} 个病`,
+    `${me}｜等级 ${info.label}（Lv${info.level}）｜身上 ${state.active.length} 个病`,
     `${careLine}`,
     `主导：${d.label}｜难受 ${Math.round(a.severity)}/100`,
     lines.filter(Boolean).join('\n'),
@@ -532,6 +555,10 @@ export function summary(state, cfg, now = Date.now()) {
     rolls: state.rolls,
     care: careSummary(state, cfg, now),
     gone: (state.gone || []).map((g) => ({ id: g.id, label: BY_ID.get(g.id)?.label ?? g.id, at: g.at })),
+    deaths: Math.max(0, Number(state.deaths) || 0),
+    lastAidAt: Number(state.lastAidAt) || 0,
+    idleMin: Math.max(0, Math.round((now - (Number(state.lastAidAt) || now)) / 60000)),
+    deathLog: (state.deathLog || []).slice(0, 10).map((x) => ({ at: x.at, id: x.id, label: x.label, severity: x.severity })),
     diseases: state.active
       .map((a) => ({
         id: a.id,
@@ -544,6 +571,51 @@ export function summary(state, cfg, now = Date.now()) {
       }))
       .sort((p, q) => q.severity - p.severity),
   }
+}
+
+/* ------------------------------- 暴毙 ------------------------------- */
+
+/**
+ * 判定要不要暴毙：身上最重的那个病 >= deathAt，并且距最后一次「管它」
+ * （care / relief / cure 都会刷新 lastAidAt）已经超过 deathAfterMin 分钟。
+ * 只是判定，不改状态——写全局计数、重置身体是调用方的事。
+ */
+export function checkDeath(state, cfg, now = Date.now()) {
+  if (!state || !Array.isArray(state.active) || !state.active.length) return null
+  const at = Number(cfg?.deathAt) || DEFAULTS.deathAt
+  const after = Number(cfg?.deathAfterMin) || DEFAULTS.deathAfterMin
+  const lastAid = Number(state.lastAidAt) || 0
+  const idleMin = (now - lastAid) / 60000
+  if (!(idleMin >= after)) return null
+  let worst = null
+  for (const a of state.active) {
+    if (!worst || Number(a.severity) > Number(worst.severity)) worst = a
+  }
+  if (!worst || Number(worst.severity) < at) return null
+  return {
+    at: now,
+    id: worst.id,
+    label: BY_ID.get(worst.id)?.label ?? worst.id,
+    severity: Math.round(Number(worst.severity) || 0),
+    idleMin: Math.round(idleMin),
+  }
+}
+
+/** 暴毙之后：这具身体清空，等级保留（下次要自己重新抽病）。deaths 是「这一具身体死过几次」。 */
+export function applyDeath(state, cfg, event, now = Date.now()) {
+  const s = { ...state, active: [], lastAidAt: now, updatedAt: now }
+  s.deaths = Math.max(0, Number(state.deaths) || 0) + 1
+  s.deathLog = [event, ...(state.deathLog || [])].slice(0, 10)
+  return s
+}
+
+/**
+ * 自我认知里的名字：没死过就是「肥鱼」，死过一次变「肥鱼 2.0」，
+ * 第二次「肥鱼 3.0」……（用户 m02244 定的规则）
+ */
+export function versionOf(deaths) {
+  const n = Math.max(0, Math.floor(Number(deaths) || 0))
+  return n <= 0 ? '肥鱼' : `肥鱼 ${n + 1}.0`
 }
 
 export const DISEASE_LIST = DISEASES

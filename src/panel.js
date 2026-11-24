@@ -104,13 +104,15 @@ export function attachPanel(ctx, api) {
     careDailyCap: num(api.cfg?.careDailyCap, 8),
     careChronicAt: num(api.cfg?.careChronicAt, 12),
     chronicFloor: num(api.cfg?.chronicFloor, 6),
+    deathAt: num(api.cfg?.deathAt, 96),
+    deathAfterMin: num(api.cfg?.deathAfterMin, 240),
   })
 
   const snapshot = (wantSid) => {
     const now = Date.now()
     const sessions = listSessions()
     const sid = pickSid(wantSid)
-    const base = { ok: true, id: ID, label: api.LABEL, levels: api.LEVELS, diseases: diseasePayload(), config: configPayload(), sessions, now }
+    const base = { ok: true, id: ID, label: api.LABEL, me: api.meNow?.() || { name: '肥鱼', deaths: 0 }, levels: api.LEVELS, diseases: diseasePayload(), config: configPayload(), sessions, now }
     if (!sid) return { ...base, session: null }
     const rt = api.loadRt(sid)
     const s = api.status(rt)
@@ -125,6 +127,10 @@ export function attachPanel(ctx, api) {
         care: s.care,
         gone: s.gone,
         diseases: s.diseases,
+        deaths: s.deaths,
+        sessionDeaths: s.sessionDeaths,
+        idleMin: s.idleMin,
+        deathLog: s.deathLog,
       },
     }
   }

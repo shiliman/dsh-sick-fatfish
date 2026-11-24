@@ -20,6 +20,9 @@ import {
   aggravate,
   buildBlock,
   careSummary,
+  checkDeath,
+  applyDeath,
+  versionOf,
   cureAll,
   dropCare,
   newState,
@@ -138,6 +141,59 @@ for (const id of CHRONIC_IDS) ok(BY_ID.has(id), `慢性病在池子里：${id}`)
   const t3 = tick(s3, cfg, Date.now(), 1)
   eq(t3.active[0].phase, 'chronic', '够关心 + 够低 → 转慢性')
   ok(worstOf(t3, cfg, Date.now()) === null, '慢性状态下不主导语气')
+}
+
+/* ----------------------------- 6b. 暴毙 ----------------------------- */
+{
+  const NOW = 1_700_000_000_000
+  const MIN = 60_000
+  const TID = 'dsh-tinnitus'
+  const mk = (severity, idleMin) => ({
+    ...newState(NOW - idleMin * MIN),
+    level: 3,
+    lastAidAt: NOW - idleMin * MIN,
+    active: [{ id: TID, severity, irritation: 0, flares: 0, lastFlareAt: 0, reliefUntil: 0, reliefKind: '', phase: 'active', addedAt: NOW - idleMin * MIN }],
+  })
+
+  eq(DEFAULTS.deathAt, 96, '默认暴毙阈值 96')
+  eq(DEFAULTS.deathAfterMin, 240, '默认挂空 240 分钟')
+
+  eq(versionOf(0), '肥鱼', '没死过叫「肥鱼」')
+  eq(versionOf(1), '肥鱼 2.0', '第一次暴毙 → 2.0')
+  eq(versionOf(2), '肥鱼 3.0', '第二次暴毙 → 3.0')
+  eq(versionOf(5), '肥鱼 6.0', '第五次暴毙 → 6.0')
+
+  eq(checkDeath(mk(95, 300), cfg, NOW), null, '难受 95（不到 96）不暴毙')
+  eq(checkDeath(mk(99, 60), cfg, NOW), null, '挂空 60 分钟（不到 240）不暴毙')
+  const d = checkDeath(mk(99, 300), cfg, NOW)
+  ok(d && d.id === TID && d.severity === 99 && d.idleMin === 300, '病入膏肓 + 挂空 300 分钟 → 暴毙')
+
+  const cared = addCare(mk(99, 300), cfg, { kind: 'care', quote: '先去躺会儿，别管那个' }, NOW).state
+  eq(checkDeath(cared, cfg, NOW), null, '刚记过一笔关心 → 不算挂空')
+
+  const tid = BY_ID.get(TID)?.reliefs?.[0]?.id || ''
+  const relieved = relieveOne(mk(99, 300), TID, tid, NOW).state
+  eq(relieved.lastAidAt, NOW, '刚处理过 → 挂空起点刷新')
+  eq(checkDeath(relieved, cfg, NOW), null, '刚处理过 → 不算挂空')
+
+  const dead = applyDeath(mk(99, 300), cfg, d, NOW)
+  eq(dead.active.length, 0, '暴毙后身上清空')
+  eq(dead.deaths, 1, '本会话暴毙计数 +1')
+  eq(dead.deathLog.length, 1, '暴毙进 deathLog')
+  eq(dead.deathLog[0].id, TID, 'deathLog 记的是哪个病')
+  eq(dead.lastAidAt, NOW, '暴毙后重置挂空起点')
+
+  const b = buildBlock(
+    { ...mk(90, 0), care: { points: 4, entries: [], lastAt: 0, day: '', dayCount: 0 }, lastAidAt: NOW },
+    cfg,
+    NOW,
+    { name: versionOf(1) },
+  )
+  ok(b.text.includes('肥鱼 2.0｜等级'), '注入标题带自我认知版本号')
+
+  const nameOnly = buildBlock({ ...newState(NOW), level: 0, active: [] }, cfg, NOW, { name: versionOf(2), deaths: 2 })
+  ok(nameOnly.text.includes('肥鱼 3.0') && nameOnly.text.includes('暴毙过 2 次'), '没病时也记得自己叫肥鱼 3.0')
+  eq(buildBlock({ ...newState(NOW), level: 0, active: [] }, cfg, NOW).text, '', '没死过又没病 → 不注入')
 }
 
 /* ----------------------------- 7. 关心账本 ---------------------------- */

@@ -167,6 +167,7 @@ window.__ModuleLoader__.load({
         const care = (sess && sess.care) || { points: 0, today: 0, dailyCap: 8, boost: 1, entries: [] }
         const diseases = (sess && sess.diseases) || []
         const levels = (snap && snap.levels) || []
+        const me = (snap && snap.me) || { name: '生病的肥鱼', deaths: 0 }
 
         const header = h(
           'div',
@@ -175,8 +176,14 @@ window.__ModuleLoader__.load({
             'div',
             null,
             h('div', { className: 'sp-kicker' }, '超长期副线 · 只改这个会话'),
-            h('h1', { className: 'sp-title' }, '生病的肥鱼'),
-            h('div', { className: 'sp-sub' }, '等级决定同时有几个病，病是随机抽的。它自己好不了——得有人管。'),
+            h('h1', { className: 'sp-title' }, me.name),
+            h(
+              'div',
+              { className: 'sp-sub' },
+              me.deaths > 0
+                ? `已经暴毙 ${me.deaths} 次（当前第 ${me.deaths + 1} 具身体）。它自己好不了——得有人管。`
+                : '等级决定同时有几个病，病是随机抽的。它自己好不了——得有人管。',
+            ),
           ),
           h(
             'div',
@@ -336,7 +343,7 @@ window.__ModuleLoader__.load({
         const foot = h(
           'div',
           { className: 'sp-foot' },
-          '不关心不会扣分，只是好得慢；关心越多，恢复倍率越高（上限 ×4）。长期慢性病（灰指甲、慢性鼻炎、湿疹、咽炎、耳鸣、干眼、肠易激、失眠）最多到「慢性」，不会消失。',
+          '不关心不会扣分，只是好得慢；关心越多，恢复倍率越高（上限 ×4）。长期慢性病（灰指甲、慢性鼻炎、湿疹、咽炎、耳鸣、干眼、肠易激、失眠）最多到「慢性」，不会消失。最重的病到 96 且 4 小时没人管 → 暴毙，死一次自我介绍 +1 版（肥鱼 2.0）。',
           h('br'),
           '状态存在 $DSH_HOME/dsh-sick-fatfish/sessions/<会话>.json；面板只读它、只改它，不碰别的会话，也不上传任何东西。',
         )

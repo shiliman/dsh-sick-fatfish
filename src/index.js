@@ -19,8 +19,10 @@ import {
   TICK_MS,
   addCare,
   aggravate,
+  applyDeath,
   buildBlock,
   careSummary,
+  checkDeath,
   cureAll,
   dropCare,
   levelInfo,
@@ -34,6 +36,7 @@ import {
   shouldInject,
   summary as engineSummary,
   tick,
+  versionOf,
   worstOf,
 } from './engine.js'
 import { attachPanel } from './panel.js'
@@ -93,6 +96,29 @@ export function apply(ctx, configIn) {
 
   const fileOf = (sid) => join(baseDir, 'sessions', `${safeSid(sid)}.json`)
 
+  // 全局的「自我暴毙次数」：跨会话累计，决定自我认知里的版本号（肥鱼 2.0 / 3.0 …）
+  const globalFile = join(baseDir, 'global.json')
+  function readGlobal() {
+    const g = readJson(globalFile, null)
+    return {
+      v: 1,
+      deaths: Math.max(0, Math.round(Number(g?.deaths) || 0)),
+      history: Array.isArray(g?.history) ? g.history.slice(0, 50) : [],
+    }
+  }
+  function bumpGlobalDeath(event, sid) {
+    const g = readGlobal()
+    g.deaths += 1
+    g.history = [
+      { at: event.at, id: event.id, label: event.label, severity: event.severity, idleMin: event.idleMin, sid: safeSid(sid) },
+      ...g.history,
+    ].slice(0, 50)
+    writeJsonAtomic(globalFile, g)
+    return g
+  }
+  let deaths = readGlobal().deaths
+  const meNow = () => ({ name: versionOf(deaths), deaths })
+
   function loadRt(sid) {
     const file = fileOf(sid)
     const hit = runtimes.get(file)
@@ -151,7 +177,7 @@ export function apply(ctx, configIn) {
   function blockFor(rt, { commit = true } = {}) {
     if (disposed || !cfg.enabled || !rt.enabled) return ''
     const now = Date.now()
-    const block = buildBlock(rt.state, cfg, now)
+    const block = buildBlock(rt.state, cfg, now, { name: versionOf(deaths), deaths })
     if (!shouldInject(rt.state, cfg, block, now).ok) return ''
     if (block.text && commit) {
       rt.state.lastInjectAt = now
@@ -218,7 +244,11 @@ export function apply(ctx, configIn) {
     return loadRt(sid)
   }
 
-  const status = (rt) => engineSummary(rt.state, cfg, Date.now())
+  const status = (rt) => ({
+    ...engineSummary(rt.state, cfg, Date.now()),
+    me: meNow(),
+    sessionDeaths: Math.max(0, Number(rt.state?.deaths) || 0),
+  })
 
   const levelLine = () =>
     LEVELS.map((l) => `Lv${l.level} ${l.label}（${l.count} 个病）`).join(' / ')
@@ -433,7 +463,17 @@ export function apply(ctx, configIn) {
     if (disposed) return
     for (const rt of runtimes.values()) {
       if (!rt.enabled) continue
-      rt.state = tick(rt.state, cfg, Date.now(), 1)
+      const now = Date.now()
+      rt.state = tick(rt.state, cfg, now, 1)
+      const death = checkDeath(rt.state, cfg, now)
+      if (death) {
+        const g = bumpGlobalDeath(death, rt.sid)
+        deaths = g.deaths
+        rt.state = applyDeath(rt.state, cfg, death, now)
+        logger?.info?.(`[${ID}] 暴毙 #${g.deaths}：${death.label} ${death.severity}/100，挂空 ${death.idleMin} 分钟 → 现在叫 ${versionOf(g.deaths)}`)
+        saveRt(rt)
+        continue
+      }
       if (rt.dirty) saveRt(rt)
     }
   }, TICK_MS)
@@ -477,6 +517,8 @@ export function apply(ctx, configIn) {
       BY_ID,
       LEVELS,
       DISEASES,
+      meNow,
+      versionOf,
     })
   } catch (e) {
     logger?.warn?.(`[${ID}] 面板挂载失败：${e?.message ?? e}`)
@@ -501,6 +543,9 @@ export const __test__ = {
   shouldInject,
   modeOfAffliction,
   worstOf,
+  checkDeath,
+  applyDeath,
+  versionOf,
 }
 
 export { LEVELS, DISEASES }
