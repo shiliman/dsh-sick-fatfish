@@ -65,7 +65,7 @@ window.__ModuleLoader__.load({
 .sp-empty b { color: var(--dsw-alias-label-primary, #f9fafb); font-weight: 600; }
 .sp-foot { margin-top: 20px; font-size: 11px; line-height: 1.85; color: var(--dsw-alias-label-secondary, #cfd3d6); opacity: .7; }
 .sp-dz { display: flex; flex-direction: column; gap: 9px; }
-.sp-dz-row { display: grid; grid-template-columns: 118px 1fr 92px auto; align-items: center; gap: 10px; }
+.sp-dz-row { display: grid; grid-template-columns: 148px 1fr 92px auto; align-items: center; gap: 10px; }
 .sp-dz-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-dz-bar { position: relative; height: 8px; border-radius: 999px; background: var(--dsw-alias-bg-layer-2, #2c2c2e); overflow: hidden; }
 .sp-dz-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; transition: width .3s ease; }
@@ -236,7 +236,12 @@ window.__ModuleLoader__.load({
                   h(
                     'div',
                     { className: 'sp-dz-row', key: d.id },
-                    h('div', { className: 'sp-dz-name', title: d.label }, d.label),
+                    h(
+                      'div',
+                      { className: 'sp-dz-name', title: d.label + (d.tier === 'major' ? '（重大疾病）' : '（日常小毛病）') },
+                      d.label,
+                      h('span', { style: { marginLeft: '4px', fontSize: '9px', opacity: '.6' } }, d.tier === 'major' ? '·重' : '·小'),
+                    ),
                     h('div', { className: 'sp-dz-bar' }, h('div', { className: 'sp-dz-fill', style: { width: d.severity + '%', background: sevColor(d.severity) } })),
                     h('div', { className: 'sp-dz-val' }, String(d.severity), h('span', { className: 'sp-chip', style: { marginLeft: '6px', color: modeMeta(d.mode).color } }, modeMeta(d.mode).label)),
                     h('button', { className: 'sp-btn tiny', disabled: !!busy, title: '压一下（不是治好）', onClick: () => act('relief', { disease: d.id }, 'relief:' + d.id) }, busy === 'relief:' + d.id ? '…' : '处理'),
@@ -246,6 +251,9 @@ window.__ModuleLoader__.load({
             : h('div', { className: 'sp-hint' }, '没有病。点下面「重抽」或「开」。'),
           ((sess && sess.gone) || []).length
             ? h('div', { className: 'sp-hint', style: { marginTop: '10px' } }, '已经好透的：' + sess.gone.map((g) => g.label).join('、'))
+            : null,
+          ((sess && sess.evolved) || []).length
+            ? h('div', { className: 'sp-hint', style: { marginTop: '6px' } }, '拖成大病：' + sess.evolved.slice(0, 3).map((e) => e.fromLabel + ' → ' + e.toLabel).join('、'))
             : null,
         )
 

@@ -88,6 +88,9 @@ export function attachPanel(ctx, api) {
       id: d.id,
       prefix: d.prefix,
       label: d.label,
+      tier: d.tier || 'minor',
+      system: d.system || '',
+      weight: num(d.triggerWeight, 1),
       eeriness: num(d.eeriness, 2),
       chronic: CHRONIC_IDS.has(d.id),
       reliefs: (d.reliefs || []).map((r) => ({ id: r.id, label: r.label })),
@@ -131,6 +134,7 @@ export function attachPanel(ctx, api) {
         sessionDeaths: s.sessionDeaths,
         idleMin: s.idleMin,
         deathLog: s.deathLog,
+        evolved: s.evolved,
       },
     }
   }

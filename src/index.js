@@ -23,6 +23,7 @@ import {
   buildBlock,
   careSummary,
   checkDeath,
+  checkEvolve,
   cureAll,
   dropCare,
   levelInfo,
@@ -184,7 +185,12 @@ export function apply(ctx, configIn) {
       rt.state.lastInjectKey = block.key
       rt.dirty = true
     }
-    return block.text
+    // 打嗝不是病：不进病池、不占病位、不累积，只是偶尔真的呃一声
+    let text = block.text
+    if (text && Math.random() < 0.12) {
+      text += '\n（顺带：你刚打了一个很短嗝，就一声「呃」。别解释它，也别渲染成句子。）'
+    }
+    return text
   }
 
   function settleTurn(rt) {
@@ -465,6 +471,16 @@ export function apply(ctx, configIn) {
       if (!rt.enabled) continue
       const now = Date.now()
       rt.state = tick(rt.state, cfg, now, 1)
+      const evo = checkEvolve(rt.state, cfg, now)
+      if (evo.events.length) {
+        rt.state = evo.state
+        for (const e of evo.events) {
+          const from = BY_ID.get(e.from)?.label ?? e.from
+          const to = BY_ID.get(e.to)?.label ?? e.to
+          logger?.info?.(`[${ID}] 拖成大病：${from} → ${to}（${e.severity}/100）`)
+        }
+        rt.dirty = true
+      }
       const death = checkDeath(rt.state, cfg, now)
       if (death) {
         const g = bumpGlobalDeath(death, rt.sid)

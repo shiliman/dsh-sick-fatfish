@@ -65,6 +65,9 @@ export const DEFAULTS = {
   // 暴毙：最重的那个病到 deathAt，且这么久没人管（care/relief/cure 都算管），就死一次
   deathAt: 96,
   deathAfterMin: 240,
+  // 演变：日常小毛病严重度到 evolveAt，且拖了 evolveAfterMin 分钟没人处理，就变成一个大病
+  evolveAt: 85,
+  evolveAfterMin: 180,
 }
 
 export function normalizeConfig(input) {
@@ -148,6 +151,7 @@ export function newAffliction(id, now = Date.now()) {
     reliefKind: '',
     phase: 'active', // active | chronic（慢性稳定）
     addedAt: now,
+    hotSince: 0, // 严重度第一次越过 evolveAt 的时刻；用来判「拖了多久」
   }
 }
 
@@ -170,6 +174,7 @@ export function newState(now = Date.now()) {
     lastAidAt: now,
     deaths: 0,
     deathLog: [],
+    evolved: [],
     updatedAt: now,
   }
 }
@@ -185,6 +190,7 @@ function normalizeAffliction(raw, now) {
   a.reliefKind = typeof raw.reliefKind === 'string' ? raw.reliefKind : ''
   a.phase = raw.phase === 'chronic' ? 'chronic' : 'active'
   a.addedAt = Number(raw.addedAt) || now
+  a.hotSince = Number(raw.hotSince) || 0
   return a
 }
 
@@ -226,6 +232,10 @@ export function normalizeState(raw, now = Date.now()) {
   s.gone = (Array.isArray(raw.gone) ? raw.gone : [])
     .filter((g) => g && BY_ID.has(String(g.id)))
     .map((g) => ({ id: String(g.id), at: Number(g.at) || 0 }))
+    .slice(0, 20)
+  s.evolved = (Array.isArray(raw.evolved) ? raw.evolved : [])
+    .filter((e) => e && BY_ID.has(String(e.from)) && BY_ID.has(String(e.to)))
+    .map((e) => ({ from: String(e.from), to: String(e.to), at: Number(e.at) || 0 }))
     .slice(0, 20)
   const seen = new Set()
   for (const item of Array.isArray(raw.active) ? raw.active : []) {
@@ -281,6 +291,7 @@ export function aggravate(state, cfg, minutes, now = Date.now(), rng = Math.rand
       a.severity = clamp100(a.severity + add)
     }
     a.irritation = clamp100(a.irritation + (a.severity / 100) * 3 * (m / 12))
+    a.hotSince = a.severity >= cfg.evolveAt ? Number(a.hotSince) || now : 0
     if (a.severity >= cfg.flareAt && !relaxed && rng() < d.flareChance * (info?.flareMul ?? 1)) {
       const gain = clamp100(d.flareGain * (d.flareWeight ?? 1))
       a.severity = clamp100(a.severity + gain)
@@ -430,6 +441,47 @@ function settleChronic(s, cfg) {
   return s
 }
 
+/**
+ * 演变：日常小毛病拖久了 → 变成一个大病。
+ * 判据：severity ≥ evolveAt，且 hotSince 距今 ≥ evolveAfterMin 分钟（hotSince 由 tick 维护）。
+ * 目标：从「你身上还没有的大病」里按现实权重抽一个——不是固定的病对，
+ * 所以「牙痛拖成腰椎间盘突出」这种事会发生，写的时候不要编造医学因果。
+ */
+export function checkEvolve(state, cfg, now = Date.now(), rng = Math.random) {
+  const s = { ...state, active: state.active.map((a) => ({ ...a })), evolved: [...(state.evolved || [])] }
+  const events = []
+  const have = new Set(s.active.map((a) => a.id))
+  const majorPool = DISEASES.filter((d) => d.tier === 'major' && !have.has(d.id)).map((d) => d.id)
+  if (!majorPool.length) return { state: s, events }
+  const next = []
+  for (const a of s.active) {
+    const d = BY_ID.get(a.id)
+    const hot =
+      d &&
+      d.tier === 'minor' &&
+      Number(a.hotSince) > 0 &&
+      now - Number(a.hotSince) >= cfg.evolveAfterMin * 60_000
+    if (!hot || !majorPool.length) {
+      next.push(a)
+      continue
+    }
+    const pick = drawDiseases(1, rng, majorPool)[0]
+    if (!pick) {
+      next.push(a)
+      continue
+    }
+    majorPool.splice(majorPool.indexOf(pick), 1)
+    const m = newAffliction(pick, now)
+    m.severity = clamp(Math.round(a.severity * 0.85), 20, 90)
+    next.push(m)
+    s.evolved = [{ from: a.id, to: pick, at: now }, ...s.evolved].slice(0, 20)
+    events.push({ kind: 'evolve', from: a.id, to: pick, severity: Math.round(m.severity) })
+  }
+  s.active = next
+  s.updatedAt = now
+  return { state: s, events }
+}
+
 export function tick(state, cfg, now = Date.now(), minutes = 1) {
   const m = clamp(minutes, 0, 12 * 60)
   const s = { ...state, active: state.active.map((a) => ({ ...a })), updatedAt: now }
@@ -441,6 +493,7 @@ export function tick(state, cfg, now = Date.now(), minutes = 1) {
     a.severity = clamp100(Math.max(floor, a.severity - rate * m))
     if (a.severity <= floor && !CHRONIC_IDS.has(a.id)) a.severity = 0
     a.irritation = clamp100(a.irritation - (a.severity > 40 ? 0 : 0.25 * m * boost))
+    a.hotSince = a.severity >= cfg.evolveAt ? Number(a.hotSince) || now : 0
   }
   // 非慢性病归零即「好了」
   const still = []
@@ -577,10 +630,18 @@ export function summary(state, cfg, now = Date.now()) {
     lastAidAt: Number(state.lastAidAt) || 0,
     idleMin: Math.max(0, Math.round((now - (Number(state.lastAidAt) || now)) / 60000)),
     deathLog: (state.deathLog || []).slice(0, 10).map((x) => ({ at: x.at, id: x.id, label: x.label, severity: x.severity })),
+    evolved: (state.evolved || []).slice(0, 10).map((e) => ({
+      from: e.from,
+      fromLabel: BY_ID.get(e.from)?.label ?? e.from,
+      to: e.to,
+      toLabel: BY_ID.get(e.to)?.label ?? e.to,
+      at: e.at,
+    })),
     diseases: state.active
       .map((a) => ({
         id: a.id,
         label: BY_ID.get(a.id)?.label ?? a.id,
+        tier: BY_ID.get(a.id)?.tier ?? 'minor',
         severity: Math.round(a.severity),
         mode: modeOfAffliction(a, cfg, now),
         phase: a.phase,

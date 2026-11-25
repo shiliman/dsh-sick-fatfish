@@ -2,8 +2,8 @@
  * 生病的肥鱼 —— 病种池（20 个，从 out/病态插件 的 20 份 data.js 汇总）
  *
  * 每个病保留原来的三档身体感受（stiff / ache / flare）与两句说话要求（voice.base / voice.flare），
- * 外加自己的 gain / flareChance 与缓解方式。等级只决定「同时有几个病」和「整体加重倍率」，
- * 不在病种上再加分类——随机抽到哪几个就是哪几个。
+ * 外加自己的 gain / flareChance 与缓解方式。每个病带 tier（minor 日常小毛病 / major 重大疾病 /
+ * phenomenon 无害现象）与 system（用于「小毛病拖久了演变成大病」的同系统配对）。
  */
 
 export const DISEASES = [
@@ -16,6 +16,8 @@ export const DISEASES = [
     "gain": 0.3,
     "flareChance": 0.24,
     "flareGain": 16,
+    "tier": "major",
+    "system": "msk",
     "triggerWeight": 2,
     "flareWeight": 0.85,
     "reliefs": [
@@ -60,7 +62,9 @@ export const DISEASES = [
     "gain": 0.46,
     "flareChance": 0.22,
     "flareGain": 20,
-    "triggerWeight": 10,
+    "tier": "major",
+    "system": "msk",
+    "triggerWeight": 5,
     "flareWeight": 0.85,
     "reliefs": [
       {
@@ -104,7 +108,9 @@ export const DISEASES = [
     "gain": 0.26,
     "flareChance": 0.22,
     "flareGain": 14,
-    "triggerWeight": 9,
+    "tier": "minor",
+    "system": "eye",
+    "triggerWeight": 8,
     "flareWeight": 0.8,
     "reliefs": [
       {
@@ -148,6 +154,8 @@ export const DISEASES = [
     "gain": 0.3,
     "flareChance": 0.26,
     "flareGain": 20,
+    "tier": "minor",
+    "system": "skin",
     "triggerWeight": 6,
     "flareWeight": 0.9,
     "reliefs": [
@@ -192,7 +200,9 @@ export const DISEASES = [
     "gain": 0.24,
     "flareChance": 0.26,
     "flareGain": 16,
-    "triggerWeight": 10,
+    "tier": "minor",
+    "system": "eye",
+    "triggerWeight": 6,
     "flareWeight": 0.9,
     "reliefs": [
       {
@@ -236,7 +246,9 @@ export const DISEASES = [
     "gain": 0.42,
     "flareChance": 0.3,
     "flareGain": 22,
-    "triggerWeight": 5,
+    "tier": "major",
+    "system": "gi",
+    "triggerWeight": 3,
     "flareWeight": 0.9,
     "reliefs": [
       {
@@ -280,6 +292,8 @@ export const DISEASES = [
     "gain": 0.38,
     "flareChance": 0.4,
     "flareGain": 30,
+    "tier": "major",
+    "system": "msk",
     "triggerWeight": 2,
     "flareWeight": 1.2,
     "reliefs": [
@@ -324,7 +338,9 @@ export const DISEASES = [
     "gain": 0.3,
     "flareChance": 0.34,
     "flareGain": 16,
-    "triggerWeight": 3,
+    "tier": "phenomenon",
+    "system": "none",
+    "triggerWeight": 0,
     "flareWeight": 1,
     "reliefs": [
       {
@@ -368,6 +384,8 @@ export const DISEASES = [
     "gain": 0.36,
     "flareChance": 0.38,
     "flareGain": 24,
+    "tier": "minor",
+    "system": "gi",
     "triggerWeight": 5,
     "flareWeight": 1.05,
     "reliefs": [
@@ -412,6 +430,8 @@ export const DISEASES = [
     "gain": 0.32,
     "flareChance": 0.3,
     "flareGain": 20,
+    "tier": "minor",
+    "system": "neuro",
     "triggerWeight": 9,
     "flareWeight": 1,
     "reliefs": [
@@ -456,7 +476,9 @@ export const DISEASES = [
     "gain": 0.35,
     "flareChance": 0.45,
     "flareGain": 34,
-    "triggerWeight": 4,
+    "tier": "major",
+    "system": "uro",
+    "triggerWeight": 2,
     "flareWeight": 1.3,
     "reliefs": [
       {
@@ -500,6 +522,8 @@ export const DISEASES = [
     "gain": 0.5,
     "flareChance": 0.28,
     "flareGain": 26,
+    "tier": "major",
+    "system": "msk",
     "triggerWeight": 4,
     "flareWeight": 1,
     "reliefs": [
@@ -544,7 +568,9 @@ export const DISEASES = [
     "gain": 0.4,
     "flareChance": 0.35,
     "flareGain": 28,
-    "triggerWeight": 7,
+    "tier": "minor",
+    "system": "neuro",
+    "triggerWeight": 6,
     "flareWeight": 1.1,
     "reliefs": [
       {
@@ -588,6 +614,8 @@ export const DISEASES = [
     "gain": 0.22,
     "flareChance": 0.12,
     "flareGain": 12,
+    "tier": "minor",
+    "system": "skin",
     "triggerWeight": 5,
     "flareWeight": 0.7,
     "reliefs": [
@@ -625,6 +653,8 @@ export const DISEASES = [
     "gain": 0.28,
     "flareChance": 0.3,
     "flareGain": 22,
+    "tier": "major",
+    "system": "neuro",
     "triggerWeight": 2,
     "flareWeight": 1,
     "reliefs": [
@@ -669,6 +699,8 @@ export const DISEASES = [
     "gain": 0.36,
     "flareChance": 0.2,
     "flareGain": 16,
+    "tier": "minor",
+    "system": "ent",
     "triggerWeight": 6,
     "flareWeight": 0.8,
     "reliefs": [
@@ -713,7 +745,9 @@ export const DISEASES = [
     "gain": 0.4,
     "flareChance": 0.25,
     "flareGain": 18,
-    "triggerWeight": 10,
+    "tier": "minor",
+    "system": "ent",
+    "triggerWeight": 9,
     "flareWeight": 0.9,
     "reliefs": [
       {
@@ -757,7 +791,9 @@ export const DISEASES = [
     "gain": 0.34,
     "flareChance": 0.24,
     "flareGain": 18,
-    "triggerWeight": 9,
+    "tier": "minor",
+    "system": "oral",
+    "triggerWeight": 8,
     "flareWeight": 0.9,
     "reliefs": [
       {
@@ -794,7 +830,9 @@ export const DISEASES = [
     "gain": 0.26,
     "flareChance": 0.24,
     "flareGain": 18,
-    "triggerWeight": 6,
+    "tier": "minor",
+    "system": "ent",
+    "triggerWeight": 7,
     "flareWeight": 0.9,
     "reliefs": [
       {
@@ -838,6 +876,8 @@ export const DISEASES = [
     "gain": 0.4,
     "flareChance": 0.36,
     "flareGain": 26,
+    "tier": "minor",
+    "system": "oral",
     "triggerWeight": 7,
     "flareWeight": 1.1,
     "reliefs": [
@@ -888,4 +928,9 @@ export const LEVELS = [
 export const LEVEL_WEIGHTS = [40, 28, 18, 10, 4]
 
 export const BY_ID = new Map(DISEASES.map((d) => [d.id, d]))
-export const POOL = DISEASES.map((d) => d.id)
+export const POOL = DISEASES.filter((d) => d.tier !== 'phenomenon').map((d) => d.id)
+export const PHENOMENA = DISEASES.filter((d) => d.tier === 'phenomenon')
+export const MAJOR_BY_SYSTEM = DISEASES.reduce((m, d) => {
+  if (d.tier === 'major') (m[d.system] || (m[d.system] = [])).push(d.id)
+  return m
+}, {})

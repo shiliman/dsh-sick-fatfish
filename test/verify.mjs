@@ -21,6 +21,8 @@ import {
   buildBlock,
   careSummary,
   checkDeath,
+  checkEvolve,
+  newAffliction,
   applyDeath,
   versionOf,
   cureAll,
@@ -53,7 +55,7 @@ const cfg = normalizeConfig({})
 
 /* ------------------------------ 1. 数据 ------------------------------ */
 eq(DISEASES.length, 20, '病种 20 个')
-eq(POOL.length, 20, 'POOL 20 个')
+eq(POOL.length, 19, 'POOL 19 个（打嗝是现象，不进病池）')
 eq(LEVELS.length, 5, '等级 5 档')
 eq(LEVEL_WEIGHTS.reduce((a, b) => a + b, 0), 100, '等级权重合计 100')
 for (const l of LEVELS) ok(l.count === l.level, `Lv${l.level} 病数 = ${l.count}`)
@@ -88,7 +90,7 @@ for (const id of CHRONIC_IDS) ok(BY_ID.has(id), `慢性病在池子里：${id}`)
   ok(again.state.active.every((a) => keep.state.active.some((b) => b.id === a.id)), 'keep=true 保留原有病')
 
   // 权重来自现实患病率：越常见权重越大，抽样频率也该跟着
-  for (const d of DISEASES) ok(Number(d.triggerWeight) >= 1, `${d.id} 权重 >= 1（${d.triggerWeight}）`)
+  for (const d of DISEASES.filter((x) => x.tier !== 'phenomenon')) ok(Number(d.triggerWeight) >= 1, `${d.id} 权重 >= 1（${d.triggerWeight}）`)
   const wRh = BY_ID.get('dsh-rhinitis').triggerWeight
   const wGout = BY_ID.get('dsh-gout').triggerWeight
   ok(wRh >= wGout * 4, `慢性鼻炎权重 ${wRh} 明显高于痛风 ${wGout}`)
@@ -106,6 +108,67 @@ for (const id of CHRONIC_IDS) ok(BY_ID.has(id), `慢性病在池子里：${id}`)
   const five = drawDiseases(5)
   eq(five.length, 5, '加权抽样仍然不放回（5 个）')
   eq(new Set(five).size, 5, '加权抽样不重复')
+}
+
+/* ---------------------- 3b. 分类：小毛病 / 大病 / 现象 ---------------------- */
+{
+  const tiers = new Set(DISEASES.map((d) => d.tier))
+  ok([...tiers].every((t) => ['minor', 'major', 'phenomenon'].includes(t)), 'tier 只有 minor / major / phenomenon')
+  eq(POOL.length, 19, '病池 19 个（打嗝是现象，不算病）')
+  ok(!POOL.includes('dsh-hiccup'), '打嗝不在病池里')
+  eq(DISEASES.filter((d) => d.tier === 'minor').length, 12, '日常小毛病 12 个')
+  eq(DISEASES.filter((d) => d.tier === 'major').length, 7, '重大疾病 7 个')
+  for (const d of DISEASES.filter((x) => x.tier !== 'phenomenon')) ok(!!d.system, `${d.id} 有 system`)
+
+  const minorW = DISEASES.filter((d) => d.tier === 'minor').reduce((s, d) => s + d.triggerWeight, 0)
+  const totalW = DISEASES.filter((d) => d.tier !== 'phenomenon').reduce((s, d) => s + d.triggerWeight, 0)
+  ok(minorW / totalW > 0.7, `日常小毛病权重占 ${((minorW / totalW) * 100).toFixed(1)}%（>70%）`)
+  ok(new Set(DISEASES.filter((d) => d.tier === 'minor').map((d) => d.triggerWeight)).size > 1, '小毛病权重不是一刀切')
+}
+
+/* ---------------------------- 3c. 演变：拖成大病 ---------------------------- */
+{
+  const cfg = normalizeConfig({})
+  const now = 1_800_000_000_000
+
+  const st = newState(now - 3_600_000)
+  const a = newAffliction('dsh-toothache', now)
+  a.severity = 90
+  a.hotSince = now - 60 * 60_000
+  st.active = [a]
+  st.level = 1
+  const early = checkEvolve(st, cfg, now)
+  eq(early.events.length, 0, '拖 1 小时还不演变（要 3 小时）')
+  eq(early.state.active[0].id, 'dsh-toothache', '没到点还是原来那个小毛病')
+
+  a.hotSince = now - 181 * 60_000
+  const late = checkEvolve(st, cfg, now)
+  eq(late.events.length, 1, '拖过 3 小时 → 演变 1 次')
+  eq(late.state.active.length, 1, '演变后仍占 1 个病位')
+  ok(late.state.active[0].id !== 'dsh-toothache', '原来的小毛病消失')
+  eq(BY_ID.get(late.state.active[0].id).tier, 'major', '变成的是大病')
+  eq(late.state.evolved.length, 1, '记了一条演变')
+  ok(late.state.active[0].severity >= 20 && late.state.active[0].severity <= 90, '演变后严重度落在 20–90')
+  eq(late.state.evolved[0].from, 'dsh-toothache', '演变记录记了 from')
+
+  // 大病不再演变
+  const st3 = newState(now)
+  const c = newAffliction('dsh-cervical', now)
+  c.severity = 95
+  c.hotSince = now - 600 * 60_000
+  st3.active = [c]
+  eq(checkEvolve(st3, cfg, now).events.length, 0, '大病不会再演变')
+
+  // tick 维护 hotSince
+  const st2 = newState(now)
+  const b = newAffliction('dsh-rhinitis', now)
+  b.severity = 90
+  st2.active = [b]
+  const t1 = tick(st2, cfg, now, 1)
+  ok(t1.active[0].hotSince > 0, '严重度 ≥ evolveAt 时记下 hotSince')
+  t1.active[0].severity = 40
+  const t2 = tick(t1, cfg, now + 60_000, 1)
+  eq(t2.active[0].hotSince, 0, '降回阈值以下 hotSince 清零')
 }
 
 /* --------------------------- 4. 加重与发作 --------------------------- */

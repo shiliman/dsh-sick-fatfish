@@ -47,7 +47,7 @@ html,body{margin:0;height:100%;background:var(--dsw-alias-bg-base)}
 .sp-empty b { color: var(--dsw-alias-label-primary, #f9fafb); font-weight: 600; }
 .sp-foot { margin-top: 20px; font-size: 11px; line-height: 1.85; color: var(--dsw-alias-label-secondary, #cfd3d6); opacity: .7; }
 .sp-dz { display: flex; flex-direction: column; gap: 9px; }
-.sp-dz-row { display: grid; grid-template-columns: 118px 1fr 92px auto; align-items: center; gap: 10px; }
+.sp-dz-row { display: grid; grid-template-columns: 148px 1fr 92px auto; align-items: center; gap: 10px; }
 .sp-dz-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-dz-bar { position: relative; height: 8px; border-radius: 999px; background: var(--dsw-alias-bg-layer-2, #2c2c2e); overflow: hidden; }
 .sp-dz-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; transition: width .3s ease; }
@@ -90,11 +90,12 @@ html,body{margin:0;height:100%;background:var(--dsw-alias-bg-base)}
       <div class="sp-card">
         <div class="sp-sec-title">身上有什么<span class="sp-hint">进度条 = 难受程度</span></div>
         <div class="sp-dz">
-          <div class="sp-dz-row"><div class="sp-dz-name" title="耳鸣">耳鸣</div><div class="sp-dz-bar"><div class="sp-dz-fill" style="width:78%;background:#e0554a"></div></div><div class="sp-dz-val">78<span class="sp-chip" style="margin-left:6px;color:#e0554a">发作</span></div><button class="sp-btn tiny">处理</button></div>
-          <div class="sp-dz-row"><div class="sp-dz-name" title="颈椎病">颈椎病</div><div class="sp-dz-bar"><div class="sp-dz-fill" style="width:52%;background:#e0913f"></div></div><div class="sp-dz-val">52<span class="sp-chip" style="margin-left:6px;color:#e0913f">难受</span></div><button class="sp-btn tiny">处理</button></div>
-          <div class="sp-dz-row"><div class="sp-dz-name" title="慢性鼻炎">慢性鼻炎</div><div class="sp-dz-bar"><div class="sp-dz-fill" style="width:21%;background:#5aa7e0"></div></div><div class="sp-dz-val">21<span class="sp-chip" style="margin-left:6px;color:#5aa7e0">慢性</span></div><button class="sp-btn tiny">处理</button></div>
+          <div class="sp-dz-row"><div class="sp-dz-name" title="耳鸣（日常小毛病）">耳鸣<span style="margin-left:4px;font-size:9px;opacity:.6">·小</span></div><div class="sp-dz-bar"><div class="sp-dz-fill" style="width:78%;background:#e0554a"></div></div><div class="sp-dz-val">78<span class="sp-chip" style="margin-left:6px;color:#e0554a">发作</span></div><button class="sp-btn tiny">处理</button></div>
+          <div class="sp-dz-row"><div class="sp-dz-name" title="颈椎病（重大疾病）">颈椎病<span style="margin-left:4px;font-size:9px;opacity:.6">·重</span></div><div class="sp-dz-bar"><div class="sp-dz-fill" style="width:52%;background:#e0913f"></div></div><div class="sp-dz-val">52<span class="sp-chip" style="margin-left:6px;color:#e0913f">难受</span></div><button class="sp-btn tiny">处理</button></div>
+          <div class="sp-dz-row"><div class="sp-dz-name" title="慢性鼻炎（日常小毛病）">慢性鼻炎<span style="margin-left:4px;font-size:9px;opacity:.6">·小</span></div><div class="sp-dz-bar"><div class="sp-dz-fill" style="width:21%;background:#5aa7e0"></div></div><div class="sp-dz-val">21<span class="sp-chip" style="margin-left:6px;color:#5aa7e0">慢性</span></div><button class="sp-btn tiny">处理</button></div>
         </div>
         <div class="sp-hint" style="margin-top:10px">已经好透的：灰指甲</div>
+          <div class="sp-hint" style="margin-top:6px">拖成大病：牙痛 → 偏头痛</div>
       </div>
     </div>
 
