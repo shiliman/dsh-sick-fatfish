@@ -107,14 +107,32 @@ export function rollLevel(rng = Math.random) {
   return 1
 }
 
-/** 从病种池里不重复抽 count 个。 */
+/**
+ * 从病种池里不重复抽 count 个，按 triggerWeight 加权（权重来自现实患病率）：
+ * 现实里越常见的病越容易被抽到，罕见的要靠运气。
+ */
 export function drawDiseases(count, rng = Math.random, pool = POOL) {
-  const bag = [...pool]
+  const bag = pool
+    .map((p) => {
+      const id = String(typeof p === 'string' ? p : p?.id || '')
+      return { id, w: Math.max(0.01, Number(BY_ID.get(id)?.triggerWeight) || 1) }
+    })
+    .filter((b) => b.id)
   const out = []
   const n = Math.min(count, bag.length)
   for (let i = 0; i < n; i += 1) {
-    const idx = Math.floor(rng() * bag.length) % bag.length
-    out.push(bag.splice(idx, 1)[0])
+    let total = 0
+    for (const b of bag) total += b.w
+    let r = rng() * total
+    let idx = bag.length - 1
+    for (let j = 0; j < bag.length; j += 1) {
+      r -= bag[j].w
+      if (r <= 0) {
+        idx = j
+        break
+      }
+    }
+    out.push(bag.splice(idx, 1)[0].id)
   }
   return out
 }

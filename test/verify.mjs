@@ -24,6 +24,7 @@ import {
   applyDeath,
   versionOf,
   cureAll,
+  drawDiseases,
   dropCare,
   newState,
   normalizeConfig,
@@ -85,6 +86,26 @@ for (const id of CHRONIC_IDS) ok(BY_ID.has(id), `慢性病在池子里：${id}`)
   const keep = reroll(s, 3, () => 0.1, { keep: true })
   const again = reroll(keep.state, 3, () => 0.1, { keep: true })
   ok(again.state.active.every((a) => keep.state.active.some((b) => b.id === a.id)), 'keep=true 保留原有病')
+
+  // 权重来自现实患病率：越常见权重越大，抽样频率也该跟着
+  for (const d of DISEASES) ok(Number(d.triggerWeight) >= 1, `${d.id} 权重 >= 1（${d.triggerWeight}）`)
+  const wRh = BY_ID.get('dsh-rhinitis').triggerWeight
+  const wGout = BY_ID.get('dsh-gout').triggerWeight
+  ok(wRh >= wGout * 4, `慢性鼻炎权重 ${wRh} 明显高于痛风 ${wGout}`)
+  ok(BY_ID.get('dsh-nail-fungus').triggerWeight < BY_ID.get('dsh-floaters').triggerWeight, '灰指甲比飞蚊症罕见')
+
+  const freq = new Map()
+  for (let i = 0; i < 20000; i += 1) {
+    for (const id of drawDiseases(1)) freq.set(id, (freq.get(id) || 0) + 1)
+  }
+  const rh = freq.get('dsh-rhinitis') || 0
+  const gout = freq.get('dsh-gout') || 0
+  ok(rh > gout * 3, `抽 2 万次：鼻炎 ${rh} 次 > 痛风 ${gout} 次 ×3`)
+  ok(rh / 20000 > 0.04 && rh / 20000 < 0.15, `鼻炎频率 ${(rh / 20000 * 100).toFixed(1)}% 落在 10/121 附近`)
+
+  const five = drawDiseases(5)
+  eq(five.length, 5, '加权抽样仍然不放回（5 个）')
+  eq(new Set(five).size, 5, '加权抽样不重复')
 }
 
 /* --------------------------- 4. 加重与发作 --------------------------- */

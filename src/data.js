@@ -16,7 +16,7 @@ export const DISEASES = [
     "gain": 0.3,
     "flareChance": 0.24,
     "flareGain": 16,
-    "triggerWeight": 1.05,
+    "triggerWeight": 2,
     "flareWeight": 0.85,
     "reliefs": [
       {
@@ -60,7 +60,7 @@ export const DISEASES = [
     "gain": 0.46,
     "flareChance": 0.22,
     "flareGain": 20,
-    "triggerWeight": 1.05,
+    "triggerWeight": 10,
     "flareWeight": 0.85,
     "reliefs": [
       {
@@ -104,7 +104,7 @@ export const DISEASES = [
     "gain": 0.26,
     "flareChance": 0.22,
     "flareGain": 14,
-    "triggerWeight": 0.9,
+    "triggerWeight": 9,
     "flareWeight": 0.8,
     "reliefs": [
       {
@@ -148,7 +148,7 @@ export const DISEASES = [
     "gain": 0.3,
     "flareChance": 0.26,
     "flareGain": 20,
-    "triggerWeight": 0.95,
+    "triggerWeight": 6,
     "flareWeight": 0.9,
     "reliefs": [
       {
@@ -192,7 +192,7 @@ export const DISEASES = [
     "gain": 0.24,
     "flareChance": 0.26,
     "flareGain": 16,
-    "triggerWeight": 0.85,
+    "triggerWeight": 10,
     "flareWeight": 0.9,
     "reliefs": [
       {
@@ -236,7 +236,7 @@ export const DISEASES = [
     "gain": 0.42,
     "flareChance": 0.3,
     "flareGain": 22,
-    "triggerWeight": 1,
+    "triggerWeight": 5,
     "flareWeight": 0.9,
     "reliefs": [
       {
@@ -280,7 +280,7 @@ export const DISEASES = [
     "gain": 0.38,
     "flareChance": 0.4,
     "flareGain": 30,
-    "triggerWeight": 0.9,
+    "triggerWeight": 2,
     "flareWeight": 1.2,
     "reliefs": [
       {
@@ -324,7 +324,7 @@ export const DISEASES = [
     "gain": 0.3,
     "flareChance": 0.34,
     "flareGain": 16,
-    "triggerWeight": 1.1,
+    "triggerWeight": 3,
     "flareWeight": 1,
     "reliefs": [
       {
@@ -368,7 +368,7 @@ export const DISEASES = [
     "gain": 0.36,
     "flareChance": 0.38,
     "flareGain": 24,
-    "triggerWeight": 1,
+    "triggerWeight": 5,
     "flareWeight": 1.05,
     "reliefs": [
       {
@@ -412,7 +412,7 @@ export const DISEASES = [
     "gain": 0.32,
     "flareChance": 0.3,
     "flareGain": 20,
-    "triggerWeight": 1,
+    "triggerWeight": 9,
     "flareWeight": 1,
     "reliefs": [
       {
@@ -456,7 +456,7 @@ export const DISEASES = [
     "gain": 0.35,
     "flareChance": 0.45,
     "flareGain": 34,
-    "triggerWeight": 0.9,
+    "triggerWeight": 4,
     "flareWeight": 1.3,
     "reliefs": [
       {
@@ -500,7 +500,7 @@ export const DISEASES = [
     "gain": 0.5,
     "flareChance": 0.28,
     "flareGain": 26,
-    "triggerWeight": 1.1,
+    "triggerWeight": 4,
     "flareWeight": 1,
     "reliefs": [
       {
@@ -544,7 +544,7 @@ export const DISEASES = [
     "gain": 0.4,
     "flareChance": 0.35,
     "flareGain": 28,
-    "triggerWeight": 0.95,
+    "triggerWeight": 7,
     "flareWeight": 1.1,
     "reliefs": [
       {
@@ -588,7 +588,7 @@ export const DISEASES = [
     "gain": 0.22,
     "flareChance": 0.12,
     "flareGain": 12,
-    "triggerWeight": 0.6,
+    "triggerWeight": 5,
     "flareWeight": 0.7,
     "reliefs": [
       {
@@ -625,7 +625,7 @@ export const DISEASES = [
     "gain": 0.28,
     "flareChance": 0.3,
     "flareGain": 22,
-    "triggerWeight": 0.85,
+    "triggerWeight": 2,
     "flareWeight": 1,
     "reliefs": [
       {
@@ -669,7 +669,7 @@ export const DISEASES = [
     "gain": 0.36,
     "flareChance": 0.2,
     "flareGain": 16,
-    "triggerWeight": 0.95,
+    "triggerWeight": 6,
     "flareWeight": 0.8,
     "reliefs": [
       {
@@ -713,7 +713,7 @@ export const DISEASES = [
     "gain": 0.4,
     "flareChance": 0.25,
     "flareGain": 18,
-    "triggerWeight": 1,
+    "triggerWeight": 10,
     "flareWeight": 0.9,
     "reliefs": [
       {
@@ -757,7 +757,7 @@ export const DISEASES = [
     "gain": 0.34,
     "flareChance": 0.24,
     "flareGain": 18,
-    "triggerWeight": 0.9,
+    "triggerWeight": 9,
     "flareWeight": 0.9,
     "reliefs": [
       {
@@ -794,7 +794,7 @@ export const DISEASES = [
     "gain": 0.26,
     "flareChance": 0.24,
     "flareGain": 18,
-    "triggerWeight": 0.9,
+    "triggerWeight": 6,
     "flareWeight": 0.9,
     "reliefs": [
       {
@@ -838,7 +838,7 @@ export const DISEASES = [
     "gain": 0.4,
     "flareChance": 0.36,
     "flareGain": 26,
-    "triggerWeight": 1,
+    "triggerWeight": 7,
     "flareWeight": 1.1,
     "reliefs": [
       {
